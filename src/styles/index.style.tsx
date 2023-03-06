@@ -1,8 +1,9 @@
 import {StyleSheet} from 'react-native';
+import constantsStyle from './constants.style';
 
 export default StyleSheet.create({
   appContainer: {
-    backgroundColor: 'rgb(24,24,24)',
+    backgroundColor: constantsStyle.mainBgColor,
     flex: 1,
   },
 });

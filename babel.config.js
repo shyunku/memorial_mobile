@@ -23,6 +23,8 @@ module.exports = {
           '@styles': './src/styles',
           '@atoms': './src/atoms',
           '@utils': './src/utils',
+          '@molecules': './src/molecules',
+          '@objects': './src/objects',
         },
       },
     ],
