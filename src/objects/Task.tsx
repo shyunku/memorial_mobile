@@ -15,7 +15,7 @@ class Task {
   private _subTasks: Map<string, SubTask> = new Map();
   private _categories: Map<string, Category> = new Map();
 
-  private _repeatPeriod: string = '';
+  private _repeatPeriod: string | null = null;
   private _repeatStartAt: Date | null = null;
 
   private _next: Task | null = null;
@@ -61,6 +61,12 @@ class Task {
   }
   public set subTasks(value: Map<string, SubTask>) {
     this._subTasks = value;
+  }
+  public set repeatPeriod(value: string | null) {
+    this._repeatPeriod = value;
+  }
+  public get repeatPeriod(): string | null {
+    return this._repeatPeriod;
   }
 }
 

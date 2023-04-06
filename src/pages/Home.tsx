@@ -1,4 +1,5 @@
 import AppText from '@/atoms/AppText';
+import useSocket from '@/hooks/websocket';
 import TaskDetailModal from '@/modals/TaskDetailModal';
 import SubTask from '@/objects/Subtask';
 import Task from '@/objects/Task';
@@ -29,6 +30,8 @@ const Home = (): JSX.Element => {
   const currentTaskViewMode = TaskViewMode.LIST;
   const currentSortOption = SortOption.IMPORTANT;
   const [showTaskDetailModal, setShowTaskDetailModal] = React.useState(false);
+  const [localBlockNumber, setLocalBlockNumber] = React.useState(0);
+  const [remoteBlockNumber, setRemoteBlockNumber] = React.useState(0);
 
   const [taskMap, setTaskMap] = React.useState<Map<string, Task>>(new Map());
 
@@ -36,7 +39,18 @@ const Home = (): JSX.Element => {
     return taskMap.get(selectedTaskItemId || '') ?? null;
   }, [selectedTaskItemId, taskMap]);
 
+  const {socket, connected: socketConnected, sendSync} = useSocket();
+
   useEffect(() => {
+    if (!socketConnected) return;
+    (async () => {
+      const data: any = await sendSync('lastBlockNumber', {blockNumber: 0});
+      setRemoteBlockNumber(data);
+    })();
+  }, [socketConnected]);
+
+  useEffect(() => {
+    // sendSync("getStateByBlockNumber", {blockNumber: 0}, (data) => {
     setTaskMap(tm => {
       const newTaskMap = new Map(tm);
       for (let i = 0; i < 10; i++) {
@@ -79,6 +93,17 @@ const Home = (): JSX.Element => {
     <View style={HomeStyle.homeContainer}>
       <ScrollView stickyHeaderIndices={[0]} style={{width: '100%'}}>
         <View testID="header" style={HomeStyle.header}>
+          <View testID="sync-section" style={HomeStyle.syncSection}>
+            <AppText size={10} weight={500}>
+              {socketConnected ? '서버 연결됨' : '연결 안됨'}
+            </AppText>
+            <AppText size={10} weight={500}>
+              동기화 중
+            </AppText>
+            <AppText size={10} weight={500}>
+              {localBlockNumber}/{remoteBlockNumber}
+            </AppText>
+          </View>
           <View testID="title-section" style={HomeStyle.titleSection}>
             <AppText weight={500} size={25}>
               모든 할일 ({taskMap.size})

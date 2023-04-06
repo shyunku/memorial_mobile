@@ -19,6 +19,9 @@ export interface AppTextInputProps {
   style?: any;
   weight?: keyof typeof FontWeight | keyof typeof FontWeightValue;
   size?: number;
+  icon?: any;
+  color?: string;
+  onPress?: () => void;
   onChangeText?: (text: string) => void;
 }
 
@@ -27,14 +30,33 @@ const AppButton = ({
   style,
   weight,
   size,
+  icon,
+  color,
+  onPress,
 }: AppTextInputProps): JSX.Element => {
   const titleStyles: any = {...AppButtonStyle.appButtonTitle};
   if (weight) titleStyles.fontFamily = fontsStyle[weight];
   if (size) titleStyles.fontSize = size;
+  if (color) titleStyles.color = color;
 
-  const styles = {...AppButtonStyle.appButton, ...style};
+  let styles: any = {...AppButtonStyle.appButton};
+  if (Array.isArray(style)) {
+    for (let s of style) {
+      styles = {...styles, ...s};
+    }
+  } else {
+    styles = {...styles, ...style};
+  }
 
-  return <Button title={title} titleStyle={titleStyles} buttonStyle={styles} />;
+  return (
+    <Button
+      title={title}
+      titleStyle={titleStyles}
+      buttonStyle={styles}
+      icon={icon}
+      onPress={onPress ?? (() => {})}
+    />
+  );
 };
 
 export default AppButton;

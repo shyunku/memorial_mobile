@@ -9,6 +9,7 @@ const HomeStyle = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
+    backgroundColor: constantsStyle.mainBgColor,
     // paddingVertical: 15,
     // backgroundColor: 'red',
   },
@@ -19,6 +20,10 @@ const HomeStyle = StyleSheet.create({
 
     // backgroundColor: 'red',
     backgroundColor: `rgba(${constantsStyle.mainBgColor.slice(4, -1)}, 0.9)`,
+  },
+  syncSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   titleSection: {
     marginBottom: 15,

@@ -34,7 +34,6 @@ const TaskListItem = ({
       testID="task"
       style={taskListItemStyles}
       onPress={e => {
-        console.log('touch');
         onTaskSelect?.(task.id);
       }}>
       <View testID="task-header" style={TaskListItemStyle.taskHeader}>

@@ -1,6 +1,7 @@
 import AppButton from '@/atoms/AppButton';
 import AppText from '@/atoms/AppText';
 import SubtaskListItem from '@/components/SubtaskListItem';
+import DateRepeatPicker from '@/molecules/DateRepeatPicker.style';
 import DateTimePicker from '@/molecules/DateTimePicker';
 import SubTask from '@/objects/Subtask';
 import Task from '@/objects/Task';
@@ -36,9 +37,19 @@ const TaskDetailModal = ({task, ...rest}: TaskDetailModalProps) => {
           ]}>
           <DateTimePicker date={task?.dueDate ?? null} />
         </View>
-        <View testID="task-option" style={TaskDetailModalStyle.taskOption}>
-          <Text>여기에 반복 설정 추가</Text>
-        </View>
+        {task?.dueDate != null && task?.repeatPeriod != null && (
+          <View
+            testID="task-option"
+            style={[
+              TaskDetailModalStyle.taskOption,
+              TaskDetailModalStyle.taskOption_notLast,
+            ]}>
+            <DateRepeatPicker
+              date={task?.dueDate ?? null}
+              repeatPeriod={task?.repeatPeriod ?? null}
+            />
+          </View>
+        )}
       </View>
       <ScrollView
         testID="task-subtasks"

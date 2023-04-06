@@ -8,6 +8,9 @@ export interface AppTextInputProps {
   style?: any;
   weight?: keyof typeof FontWeight | keyof typeof FontWeightValue;
   size?: number;
+  secureTextEntry?: boolean;
+  spellCheck?: boolean;
+  autoCorrect?: boolean;
   onChangeText?: (text: string) => void;
 }
 
@@ -17,6 +20,9 @@ const AppTextInput = ({
   style,
   weight,
   size,
+  secureTextEntry,
+  spellCheck,
+  autoCorrect,
   onChangeText,
 }: AppTextInputProps): JSX.Element => {
   const styles = {...style};
@@ -29,7 +35,11 @@ const AppTextInput = ({
       placeholder={placeholder}
       style={styles}
       onChangeText={onChangeText}
-      value={value}></TextInput>
+      secureTextEntry={secureTextEntry ?? false}
+      spellCheck={spellCheck ?? false}
+      autoCorrect={autoCorrect ?? false}
+      autoCapitalize="none"
+      value={value ?? ''}></TextInput>
   );
 };
 

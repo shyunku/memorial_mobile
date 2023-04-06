@@ -12,7 +12,9 @@ interface DateTimePickerProps {
 
 const DateTimePicker = ({date}: DateTimePickerProps): JSX.Element => {
   const dateTimeText = useMemo(() => {
-    return date ? moment(date).format('YYYY년 MM월 a h시 mm분') : '기한 없음';
+    return date
+      ? moment(date).format('YYYY년 MM월 DD일 a h시 mm분')
+      : '기한 없음';
   }, [date]);
 
   const mainColor = date
