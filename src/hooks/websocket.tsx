@@ -15,7 +15,6 @@ const WEBSOCKET_ENDPOINT = `${SERVER_ENDPOINT.replace(
 
 const queue: Map<string, any> = new Map();
 const messageHandlers: Map<string, any> = new Map();
-const socketHandlers: Map<string, any> = new Map();
 
 const useSocket = () => {
   const authInfo = useSelector(accountAuthSlice);
@@ -77,6 +76,10 @@ const useSocket = () => {
   );
 
   useEffect(() => {
+    // delete old handlers
+    messageHandlers.clear();
+    queue.clear();
+
     console.log(`Connecting to server: ${WEBSOCKET_ENDPOINT}`);
     const ws = new WebSocket(WEBSOCKET_ENDPOINT, null, {
       headers: {
@@ -143,7 +146,7 @@ const useSocket = () => {
     setSocket(ws);
   }, []);
 
-  return {socket, connected, sendSync};
+  return {socket, connected, onMessage, sendSync};
 };
 
 export default useSocket;

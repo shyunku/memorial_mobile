@@ -6,15 +6,15 @@ import {useMemo} from 'react';
 import {View} from 'react-native';
 
 interface TaskListViewProps {
-  taskMap: Map<string, Task>;
+  taskMap: {[key: string]: Task};
 }
 
 const TaskListView = ({taskMap, ...rest}: TaskListViewProps): JSX.Element => {
   const taskList: Task[] = useMemo(() => {
     const tl: Task[] = [];
-    taskMap.forEach((task: Task) => {
-      tl.push(task);
-    });
+    for (let tid in taskMap) {
+      tl.push(taskMap[tid]);
+    }
     return tl;
   }, [taskMap]);
 

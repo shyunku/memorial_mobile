@@ -68,6 +68,30 @@ class Task {
   public get repeatPeriod(): string | null {
     return this._repeatPeriod;
   }
+  public set repeatStartAt(value: Date | null) {
+    this._repeatStartAt = value;
+  }
+  public get repeatStartAt(): Date | null {
+    return this._repeatStartAt;
+  }
+  public get createdAt(): Date | null {
+    return this._createdAt;
+  }
+  public set createdAt(value: Date | null) {
+    this._createdAt = value;
+  }
+  public get memo(): string {
+    return this._memo;
+  }
+  public set memo(value: string) {
+    this._memo = value;
+  }
+  public get doneAt(): Date | null {
+    return this._doneAt;
+  }
+  public set doneAt(value: Date | null) {
+    this._doneAt = value;
+  }
 }
 
 export default Task;

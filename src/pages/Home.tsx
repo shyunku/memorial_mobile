@@ -1,4 +1,5 @@
 import AppText from '@/atoms/AppText';
+import {applyInitialState} from '@/hooks/executor';
 import useSocket from '@/hooks/websocket';
 import TaskDetailModal from '@/modals/TaskDetailModal';
 import SubTask from '@/objects/Subtask';
@@ -10,6 +11,8 @@ import {useEffect} from 'react';
 import {View, Text, ScrollView, Platform} from 'react-native';
 import Modal from 'react-native-modal';
 import HomeStyle from './Home.style';
+import {useDispatch, useSelector} from 'react-redux';
+import {tasksSlice} from '@/store/stateSlice';
 
 const TaskViewMode = {
   LIST: '리스트',
@@ -24,6 +27,10 @@ const SortOption = {
 };
 
 const Home = (): JSX.Element => {
+  const dispatch = useDispatch();
+  const taskMap: any = useSelector(tasksSlice);
+
+  // console.log('taskMap', taskMap);
   const [selectedTaskItemId, setSelectedTaskItemId] = React.useState<
     string | null
   >(null);
@@ -33,51 +40,32 @@ const Home = (): JSX.Element => {
   const [localBlockNumber, setLocalBlockNumber] = React.useState(0);
   const [remoteBlockNumber, setRemoteBlockNumber] = React.useState(0);
 
-  const [taskMap, setTaskMap] = React.useState<Map<string, Task>>(new Map());
-
   const selectedTask: Task | null = useMemo(() => {
-    return taskMap.get(selectedTaskItemId || '') ?? null;
+    return taskMap[selectedTaskItemId || ''] ?? null;
   }, [selectedTaskItemId, taskMap]);
 
-  const {socket, connected: socketConnected, sendSync} = useSocket();
+  const {socket, connected: socketConnected, onMessage, sendSync} = useSocket();
 
   useEffect(() => {
     if (!socketConnected) return;
     (async () => {
-      const data: any = await sendSync('lastBlockNumber', {blockNumber: 0});
-      setRemoteBlockNumber(data);
-    })();
-  }, [socketConnected]);
-
-  useEffect(() => {
-    // sendSync("getStateByBlockNumber", {blockNumber: 0}, (data) => {
-    setTaskMap(tm => {
-      const newTaskMap = new Map(tm);
-      for (let i = 0; i < 10; i++) {
-        const task = new Task(`할 일 ${i + 1}`);
-        if (Math.random() < 0.5) {
-          task.dueDate = moment()
-            .add(Math.random() * 1000000, 'second')
-            .toDate();
-        }
-        if (Math.random() < 1) {
-          for (let j = 0; j < Math.random() * 10; j++) {
-            const subtask = new SubTask(`서브 할 일 ${j + 1}`);
-            task.subTasks.set(subtask.id, subtask);
-          }
-        }
-        if (Math.random() < 0.3) {
-          task.done = true;
-        }
-        newTaskMap.set(task.id, task);
+      const lastRemoteBlockNumber: any = await sendSync('lastBlockNumber');
+      setRemoteBlockNumber(lastRemoteBlockNumber);
+      const lastState: any = await sendSync('stateByBlockNumber', {
+        blockNumber: lastRemoteBlockNumber,
+      });
+      // console.log(lastState);
+      try {
+        applyInitialState(dispatch, lastRemoteBlockNumber, lastState);
+      } catch (err) {
+        console.error(err);
       }
-      return newTaskMap;
-    });
+    })();
 
-    return () => {
-      setTaskMap(new Map());
-    };
-  }, []);
+    onMessage('broadcast_transaction', (data: any) => {
+      console.log('tx', data);
+    });
+  }, [socketConnected]);
 
   const taskSelectHandler = (taskId: string) => {
     setSelectedTaskItemId(taskId);
