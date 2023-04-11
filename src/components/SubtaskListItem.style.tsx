@@ -16,7 +16,7 @@ const SubtaskListItemStyle = StyleSheet.create({
     padding: 0,
     margin: 0,
     fontSize: 12,
-    color: constantsStyle.stdTextColor,
+    color: '#b4c8f0',
     paddingHorizontal: 6,
   },
 });

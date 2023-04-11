@@ -6,57 +6,63 @@ import SubTask from '@/objects/Subtask';
 import Task from '@/objects/Task';
 import TaskListView from '@/taskViews/TaskListView';
 import moment from 'moment';
-import React, {useMemo} from 'react';
+import React, {useCallback, useMemo, useState} from 'react';
 import {useEffect} from 'react';
-import {View, Text, ScrollView, Platform} from 'react-native';
+import {View, Text, ScrollView, Platform, TouchableOpacity} from 'react-native';
 import Modal from 'react-native-modal';
 import HomeStyle from './Home.style';
 import {useDispatch, useSelector} from 'react-redux';
-import {tasksSlice} from '@/store/stateSlice';
-
-const TaskViewMode = {
-  LIST: '리스트',
-  CALENDAR: '캘린더',
-};
-
-const SortOption = {
-  IMPORTANT: '중요도',
-  DUE_DATE: '기한',
-  REMAIN_DATE: '남은 기한',
-  CREATED_DATE: '생성일',
-};
+import {categoriesSlice, tasksSlice} from '@/store/stateSlice';
+import currentSlice, {selectedCategoryIdSlice} from '@/store/currentSlice';
+import {
+  DEFAULT_CATEGORIES,
+  SortOption,
+  TaskViewMode,
+} from '@/constants/common.const';
+import Category from '@/objects/Category';
 
 const Home = (): JSX.Element => {
   const dispatch = useDispatch();
   const taskMap: any = useSelector(tasksSlice);
+  const categories: any = useSelector(categoriesSlice);
+  const selectedCategoryId: any = useSelector(selectedCategoryIdSlice);
 
-  // console.log('taskMap', taskMap);
-  const [selectedTaskItemId, setSelectedTaskItemId] = React.useState<
-    string | null
-  >(null);
+  const [selectedTaskItemId, setSelectedTaskItemId] = useState<string | null>(
+    null,
+  );
+
   const currentTaskViewMode = TaskViewMode.LIST;
-  const currentSortOption = SortOption.IMPORTANT;
-  const [showTaskDetailModal, setShowTaskDetailModal] = React.useState(false);
-  const [localBlockNumber, setLocalBlockNumber] = React.useState(0);
-  const [remoteBlockNumber, setRemoteBlockNumber] = React.useState(0);
+  const [currentSortOption, setCurrentSortOption] = useState(
+    SortOption.IMPORTANT,
+  );
+
+  const [showTaskDetailModal, setShowTaskDetailModal] = useState(false);
+  const [localBlockNumber, setLocalBlockNumber] = useState(0);
+  const [remoteBlockNumber, setRemoteBlockNumber] = useState(0);
 
   const selectedTask: Task | null = useMemo(() => {
     return taskMap[selectedTaskItemId || ''] ?? null;
   }, [selectedTaskItemId, taskMap]);
+  const selectedCategory: Category | null = useMemo(() => {
+    return selectedCategory?.isDefault
+      ? DEFAULT_CATEGORIES[selectedCategory.id]
+      : categories[selectedCategoryId];
+  }, [selectedCategoryId, categories]);
 
   const {socket, connected: socketConnected, onMessage, sendSync} = useSocket();
 
   useEffect(() => {
     if (!socketConnected) return;
+    // TODO :: test token
     (async () => {
       const lastRemoteBlockNumber: any = await sendSync('lastBlockNumber');
       setRemoteBlockNumber(lastRemoteBlockNumber);
       const lastState: any = await sendSync('stateByBlockNumber', {
         blockNumber: lastRemoteBlockNumber,
       });
-      // console.log(lastState);
       try {
         applyInitialState(dispatch, lastRemoteBlockNumber, lastState);
+        setLocalBlockNumber(lastRemoteBlockNumber);
       } catch (err) {
         console.error(err);
       }
@@ -66,6 +72,81 @@ const Home = (): JSX.Element => {
       console.log('tx', data);
     });
   }, [socketConnected]);
+
+  /* ----------------------- filter ----------------------- */
+  const categoryFilter = useMemo((): Function => {
+    switch (selectedCategoryId) {
+      case DEFAULT_CATEGORIES.ALL:
+        return () => true;
+      case DEFAULT_CATEGORIES.TODAY:
+        return (task: Task) =>
+          task.dueDate != null && moment(task.dueDate).isSame(moment(), 'day');
+      default:
+        return (task: Task) => {
+          if (
+            selectedCategory != null &&
+            selectedCategory.isDefault === false &&
+            task.categories.has(selectedCategory.id) === false
+          ) {
+            return false;
+          }
+          return true;
+        };
+    }
+  }, [selectedCategory]);
+
+  const secretFilter = useCallback(
+    (task: Task) => {
+      try {
+        const categories: Map<string, Category> = task.categories;
+        console.log(task.categories);
+        for (let [cid, category] of categories.entries()) {
+          if (category.secret === true && cid != selectedCategoryId)
+            return false;
+        }
+        return true;
+      } catch (err) {
+        console.error(err);
+        return false;
+      }
+    },
+    [selectedCategoryId],
+  );
+
+  const totalFilter = useCallback(
+    (task: Task) => {
+      return categoryFilter(task) && secretFilter(task);
+    },
+    [categoryFilter, secretFilter],
+  );
+
+  /* ----------------------- Sorters ----------------------- */
+  const sorter = useMemo(() => {
+    switch (currentSortOption) {
+      case SortOption.IMPORTANT:
+        return null;
+      case SortOption.REMAIN_DATE:
+        return (t1: Task, t2: Task) => {
+          if (t1.dueDate == null && t2.dueDate == null) return 0;
+          if (t1.dueDate == null) return 1;
+          if (t2.dueDate == null) return -1;
+          return moment(t2.dueDate).diff(moment(t1.dueDate));
+        };
+      case SortOption.DUE_DATE:
+        return (t1: Task, t2: Task) => {
+          if (t1.dueDate == null && t2.dueDate == null) return 0;
+          if (t1.dueDate == null) return 1;
+          if (t2.dueDate == null) return -1;
+          return moment(t1.dueDate).diff(moment(t2.dueDate));
+        };
+      case SortOption.CREATED_DATE:
+        return (t1: Task, t2: Task) => {
+          return moment(t2.createdAt).diff(moment(t1.createdAt));
+        };
+      default:
+        return null;
+    }
+  }, [currentSortOption]);
 
   const taskSelectHandler = (taskId: string) => {
     setSelectedTaskItemId(taskId);
@@ -83,7 +164,11 @@ const Home = (): JSX.Element => {
         <View testID="header" style={HomeStyle.header}>
           <View testID="sync-section" style={HomeStyle.syncSection}>
             <AppText size={10} weight={500}>
-              {socketConnected ? '서버 연결됨' : '연결 안됨'}
+              {socketConnected
+                ? localBlockNumber !== remoteBlockNumber
+                  ? '동기화 중'
+                  : '동기화 완료'
+                : '오프라인 모드'}
             </AppText>
             <AppText size={10} weight={500}>
               동기화 중
@@ -94,7 +179,7 @@ const Home = (): JSX.Element => {
           </View>
           <View testID="title-section" style={HomeStyle.titleSection}>
             <AppText weight={500} size={25}>
-              모든 할일 ({taskMap.size})
+              모든 할일 ({Object.keys(taskMap).length})
             </AppText>
           </View>
           <View testID="option-section" style={HomeStyle.optionSection}>
@@ -136,7 +221,11 @@ const Home = (): JSX.Element => {
                 }
 
                 return (
-                  <View testID="view-option" key={option} style={styles}>
+                  <TouchableOpacity
+                    testID="view-option"
+                    key={option}
+                    style={styles}
+                    onPress={e => setCurrentSortOption(option)}>
                     <AppText
                       style={[
                         HomeStyle.viewOptionText,
@@ -145,14 +234,19 @@ const Home = (): JSX.Element => {
                       size={10}>
                       {option} 순
                     </AppText>
-                  </View>
+                  </TouchableOpacity>
                 );
               })}
             </View>
           </View>
         </View>
         <View testID="body" style={HomeStyle.body}>
-          <TaskListView taskMap={taskMap} onTaskSelect={taskSelectHandler} />
+          <TaskListView
+            taskMap={taskMap}
+            onTaskSelect={taskSelectHandler}
+            filter={totalFilter}
+            sorter={sorter}
+          />
         </View>
       </ScrollView>
       <TaskDetailModal

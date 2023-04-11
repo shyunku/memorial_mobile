@@ -5,7 +5,8 @@ import DateRepeatPicker from '@/molecules/DateRepeatPicker.style';
 import DateTimePicker from '@/molecules/DateTimePicker';
 import SubTask from '@/objects/Subtask';
 import Task from '@/objects/Task';
-import {useMemo} from 'react';
+import {fastInterval, fromRelativeTime} from '@/util/common';
+import {useEffect, useMemo, useState} from 'react';
 import {ScrollView, Text, View} from 'react-native';
 import StandardModal, {StandardModalProps} from './StandardModal';
 import TaskDetailModalStyle from './TaskDetailModal.style';
@@ -15,9 +16,32 @@ interface TaskDetailModalProps extends StandardModalProps {
 }
 
 const TaskDetailModal = ({task, ...rest}: TaskDetailModalProps) => {
+  const [counter, setCounter] = useState(0);
   const subtasks: SubTask[] = useMemo(() => {
     return task?.subTasks != null ? Array.from(task.subTasks.values()) : [];
   }, [task]);
+
+  const remainTime = useMemo((): number | null => {
+    if (task?.dueDate == null) return null;
+    const taskTime = task?.dueDate?.getTime() ?? null;
+    if (taskTime == null) return null;
+    const now = Date.now();
+    const diff = taskTime - now;
+    return diff;
+  }, [task, counter]);
+
+  const remainTimeText = useMemo(() => {
+    return `${fromRelativeTime(Math.abs(remainTime))}`;
+  }, [remainTime]);
+
+  useEffect(() => {
+    let counterThread = fastInterval(() => {
+      setCounter(counter => counter + 1);
+    }, 1000);
+    return () => {
+      clearInterval(counterThread);
+    };
+  }, []);
 
   return (
     <StandardModal {...rest}>
@@ -69,13 +93,13 @@ const TaskDetailModal = ({task, ...rest}: TaskDetailModalProps) => {
           size={10}
           weight="bold"
           style={TaskDetailModalStyle.remainTimerLabel}>
-          남은 시간
+          {remainTime && remainTime < 0 ? '지난 시간' : '남은 시간'}
         </AppText>
         <AppText
           size={16}
           weight="normal"
           style={TaskDetailModalStyle.remainTimerText}>
-          18일 19시간 32분 12초
+          {remainTime ? fromRelativeTime(Math.abs(remainTime)) : '기한 없음'}
         </AppText>
       </View>
       <AppButton title={'하위 할 일 또는 이벤트 추가'} size={11} />

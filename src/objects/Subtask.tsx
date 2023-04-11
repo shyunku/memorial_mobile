@@ -27,6 +27,30 @@ class SubTask {
   public set title(value: string | null) {
     this._title = value;
   }
+  public get done(): boolean {
+    return this._done;
+  }
+  public set done(value: boolean) {
+    this._done = value;
+  }
+  public get dueDate(): Date | null {
+    return this._dueDate;
+  }
+  public set dueDate(value: Date | null) {
+    this._dueDate = value;
+  }
+  public get createdAt(): Date | null {
+    return this._createdAt;
+  }
+  public set createdAt(value: Date | null) {
+    this._createdAt = value;
+  }
+  public get doneAt(): Date | null {
+    return this._doneAt;
+  }
+  public set doneAt(value: Date | null) {
+    this._doneAt = value;
+  }
 }
 
 export default SubTask;

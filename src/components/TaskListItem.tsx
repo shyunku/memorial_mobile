@@ -29,6 +29,21 @@ const TaskListItem = ({
     }
   }, [task.dueDate]);
 
+  const taskRepeatLabel = useMemo(() => {
+    if (!task?.repeatPeriod || !task?.repeatStartAt) return '';
+    switch (task.repeatPeriod) {
+      case 'day':
+        return moment(task.repeatStartAt).format('매일 A h시 mm분');
+      case 'week':
+        return moment(task.repeatStartAt).format('매주 ddd요일');
+      case 'month':
+        return moment(task.repeatStartAt).format('매월 D일');
+      case 'year':
+        return moment(task.repeatStartAt).format('매년 M월 D일');
+    }
+    return '';
+  }, [task]);
+
   return (
     <TouchableOpacity
       testID="task"
@@ -54,16 +69,18 @@ const TaskListItem = ({
                 {taskDueDateText}
               </AppText>
             </View>
-            <View testID="task-repeat-period">
-              <AppText
-                size={8}
-                style={[
-                  TaskListItemStyle.taskDateInfoText,
-                  TaskListItemStyle.taskRepeatPeriodText,
-                ]}>
-                (매주 월요일)
-              </AppText>
-            </View>
+            {task?.repeatPeriod && (
+              <View testID="task-repeat-period">
+                <AppText
+                  size={8}
+                  style={[
+                    TaskListItemStyle.taskDateInfoText,
+                    TaskListItemStyle.taskRepeatPeriodText,
+                  ]}>
+                  ({taskRepeatLabel})
+                </AppText>
+              </View>
+            )}
           </View>
         </View>
       </View>

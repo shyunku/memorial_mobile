@@ -7,28 +7,53 @@ import {View} from 'react-native';
 
 interface TaskListViewProps {
   taskMap: {[key: string]: Task};
+  filter: Function;
+  sorter: (a: Task, b: Task) => number;
 }
 
-const TaskListView = ({taskMap, ...rest}: TaskListViewProps): JSX.Element => {
-  const taskList: Task[] = useMemo(() => {
-    const tl: Task[] = [];
+const TaskListView = ({
+  taskMap,
+  filter,
+  sorter,
+  ...rest
+}: TaskListViewProps): JSX.Element => {
+  const sortedTaskList: Task[] = useMemo(() => {
+    let sorted: Task[] = [];
+    // find first
+    let iterTask: Task | null = null;
     for (let tid in taskMap) {
-      tl.push(taskMap[tid]);
+      const task = taskMap[tid];
+      if (task.prev == null) {
+        iterTask = task;
+      }
     }
-    return tl;
-  }, [taskMap]);
+    if (iterTask == null) {
+      console.log(`No first task found`);
+    } else {
+      while (iterTask != null) {
+        sorted.push(iterTask);
+        iterTask = taskMap[iterTask.next ?? ''];
+      }
+    }
+    // sort by outer sorter if provided
+    if (sorter != null && typeof sorter == 'function') {
+      sorted = sorted.sort(sorter);
+    }
+    return sorted;
+  }, [taskMap, sorter]);
 
   const [doneTaskList, notDoneTaskList] = useMemo(() => {
     const doneTaskList: Task[] = [];
     const notDoneTaskList: Task[] = [];
 
-    for (let i = 0; i < taskList.length; i++) {
-      const task = taskList[i];
+    for (let i = 0; i < sortedTaskList.length; i++) {
+      const task = sortedTaskList[i];
+      if (!filter(task)) continue;
       (task.done ? doneTaskList : notDoneTaskList).push(task);
     }
 
     return [doneTaskList, notDoneTaskList];
-  }, [taskList]);
+  }, [sortedTaskList]);
 
   return (
     <View testID="task-list-view" style={TaskListViewStyle.taskListView}>
@@ -61,7 +86,7 @@ const TaskGroup = ({label, taskList, ...rest}: TaskGroupProps): JSX.Element => {
             <TaskListItem
               key={index}
               task={task}
-              notLast={index < 23 - 1}
+              notLast={index < taskList.length - 1}
               {...rest}
             />
           );

@@ -2,6 +2,15 @@ import Task from '@/objects/Task';
 import {useDispatch} from 'react-redux';
 import {setCategories, setTasks} from '@/store/stateSlice';
 import Category from '@/objects/Category';
+import SubTask from '@/objects/Subtask';
+
+const convertDate = (date: any) => {
+  return date ? new Date(date) : null;
+};
+
+const convertStr = (str: any) => {
+  return str != null && typeof str === 'string' && str.length > 0 ? str : null;
+};
 
 export const applyInitialState = (
   dispatch: Function,
@@ -16,7 +25,7 @@ export const applyInitialState = (
     const rawCategory = categories[cid];
     const category = new Category(rawCategory.title, rawCategory.secret, false);
     category.id = cid;
-    category.createdAt = new Date(rawCategory.createdAt);
+    category.createdAt = convertDate(rawCategory.createdAt);
     categoryMap[cid] = category;
   }
 
@@ -24,21 +33,42 @@ export const applyInitialState = (
     const rawTask = tasks[tid];
     const task = new Task(rawTask.title);
     task.id = tid;
-    task.repeatStartAt = new Date(rawTask.repeatStartAt);
+    task.repeatStartAt = convertDate(rawTask.repeatStartAt);
     task.repeatPeriod = rawTask.repeatPeriod;
     task.memo = rawTask.memo;
-    task.dueDate = new Date(rawTask.dueDate);
+    task.dueDate = convertDate(rawTask.dueDate);
     task.done = rawTask.done;
-    task.doneAt = new Date(rawTask.doneAt);
-    task.createdAt = new Date(rawTask.createdAt);
+    task.doneAt = convertDate(rawTask.doneAt);
+    task.createdAt = convertDate(rawTask.createdAt);
 
     const rawTaskCategories = rawTask.categories;
-    console.log('rtc', rawTaskCategories);
+    for (let cid in rawTaskCategories) {
+      const category: Category = categoryMap[cid];
+      task.categories.set(category.id, category);
+    }
 
     const rawSubtasks = rawTask.subtasks;
-    console.log('st', rawSubtasks);
-
+    for (let sid in rawSubtasks) {
+      let rawSubtask = rawSubtasks[sid];
+      let subtask = new SubTask(rawSubtask.title);
+      subtask.id = sid;
+      subtask.createdAt = convertDate(rawSubtask.createdAt);
+      subtask.done = rawSubtask.done;
+      subtask.doneAt = convertDate(rawSubtask.doneAt);
+      subtask.dueDate = convertDate(rawSubtask.dueDate);
+      task.subTasks.set(subtask.id, subtask);
+    }
     taskMap[tid] = task;
+  }
+
+  for (let tid in taskMap) {
+    let task = taskMap[tid];
+    let rawTask = tasks[tid];
+    task.next = convertStr(rawTask.next);
+    const nextTask = taskMap[rawTask.next];
+    if (nextTask != null) {
+      nextTask.prev = task.id;
+    }
   }
 
   dispatch(setCategories(categoryMap));

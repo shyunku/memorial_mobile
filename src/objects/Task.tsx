@@ -18,8 +18,8 @@ class Task {
   private _repeatPeriod: string | null = null;
   private _repeatStartAt: Date | null = null;
 
-  private _next: Task | null = null;
-  private _prev: Task | null = null;
+  private _next: string | null = null;
+  private _prev: string | null = null;
 
   constructor(title: string, dueDate?: Date, repeatPeriod?: string) {
     this._id = uuid.v4().toString();
@@ -91,6 +91,24 @@ class Task {
   }
   public set doneAt(value: Date | null) {
     this._doneAt = value;
+  }
+  public get categories(): Map<string, Category> {
+    return this._categories;
+  }
+  public set categories(value: Map<string, Category>) {
+    this._categories = value;
+  }
+  public get next(): string | null {
+    return this._next;
+  }
+  public set next(value: string | null) {
+    this._next = value;
+  }
+  public get prev(): string | null {
+    return this._prev;
+  }
+  public set prev(value: string | null) {
+    this._prev = value;
   }
 }
 
