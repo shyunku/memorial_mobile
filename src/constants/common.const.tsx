@@ -9,8 +9,8 @@ export const DEFAULT_CATEGORIES: {[key: string]: any} = {
 };
 
 export const SortOption = {
-  IMPORTANT: '중요도',
   DUE_DATE: '기한',
+  IMPORTANT: '중요도',
   REMAIN_DATE: '남은 기한',
   CREATED_DATE: '생성일',
 };

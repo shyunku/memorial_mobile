@@ -23,7 +23,7 @@ import Category from '@/objects/Category';
 
 const Home = (): JSX.Element => {
   const dispatch = useDispatch();
-  const taskMap: any = useSelector(tasksSlice);
+  const taskMap: {[key: string]: Task} = useSelector(tasksSlice);
   const categories: any = useSelector(categoriesSlice);
   const selectedCategoryId: any = useSelector(selectedCategoryIdSlice);
 
@@ -33,7 +33,7 @@ const Home = (): JSX.Element => {
 
   const currentTaskViewMode = TaskViewMode.LIST;
   const [currentSortOption, setCurrentSortOption] = useState(
-    SortOption.IMPORTANT,
+    SortOption.DUE_DATE,
   );
 
   const [showTaskDetailModal, setShowTaskDetailModal] = useState(false);
@@ -48,6 +48,10 @@ const Home = (): JSX.Element => {
       ? DEFAULT_CATEGORIES[selectedCategory.id]
       : categories[selectedCategoryId];
   }, [selectedCategoryId, categories]);
+
+  const undoneTaskCounts = useMemo(() => {
+    return Object.values(taskMap).filter((task: Task) => !task.done).length;
+  }, [taskMap]);
 
   const {socket, connected: socketConnected, onMessage, sendSync} = useSocket();
 
@@ -99,7 +103,11 @@ const Home = (): JSX.Element => {
     (task: Task) => {
       try {
         const categories: Map<string, Category> = task.categories;
-        console.log(task.categories);
+        if (categories == undefined) {
+          console.log(task.categories, task);
+          console.error('categories is undefined');
+          return false;
+        }
         for (let [cid, category] of categories.entries()) {
           if (category.secret === true && cid != selectedCategoryId)
             return false;
@@ -170,16 +178,16 @@ const Home = (): JSX.Element => {
                   : '동기화 완료'
                 : '오프라인 모드'}
             </AppText>
-            <AppText size={10} weight={500}>
+            {/* <AppText size={10} weight={500}>
               동기화 중
-            </AppText>
+            </AppText> */}
             <AppText size={10} weight={500}>
               {localBlockNumber}/{remoteBlockNumber}
             </AppText>
           </View>
           <View testID="title-section" style={HomeStyle.titleSection}>
             <AppText weight={500} size={25}>
-              모든 할일 ({Object.keys(taskMap).length})
+              모든 할일 ({undoneTaskCounts})
             </AppText>
           </View>
           <View testID="option-section" style={HomeStyle.optionSection}>

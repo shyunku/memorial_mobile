@@ -1,6 +1,10 @@
-import {accountAuthSlice, accountInfoSlice} from '@/store/accountSlice';
+import {
+  accountAuthSlice,
+  accountInfoSlice,
+  removeAuth,
+} from '@/store/accountSlice';
 import {useCallback, useEffect, useMemo, useState} from 'react';
-import {useSelector} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import PackageJSON from '../../package.json';
 import {v4 as uuid} from 'uuid';
 import {Buffer} from 'buffer';
@@ -18,6 +22,7 @@ const messageHandlers: Map<string, any> = new Map();
 
 const useSocket = () => {
   const authInfo = useSelector(accountAuthSlice);
+  const dispatch = useDispatch();
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [connected, setConnected] = useState(false);
 
@@ -96,6 +101,10 @@ const useSocket = () => {
     };
     ws.onerror = error => {
       console.log('Error: ', error);
+      if (error?.message.includes('401')) {
+        console.log('Unauthorized User, deleting auth info');
+        dispatch(removeAuth());
+      }
     };
     ws.onmessage = (...arg) => {
       try {
