@@ -47,7 +47,7 @@ const TaskListItem = ({
   return (
     <TouchableOpacity
       testID="task"
-      style={taskListItemStyles}
+      style={[taskListItemStyles, {opacity: task.done ? 0.4 : 1}]}
       onPress={e => {
         onTaskSelect?.(task.id);
       }}>

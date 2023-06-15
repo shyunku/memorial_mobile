@@ -51,6 +51,11 @@ class SubTask {
   public set doneAt(value: Date | null) {
     this._doneAt = value;
   }
+  public static fromJSON(json: any): SubTask {
+    if (json instanceof SubTask) return json;
+    let task = Object.create(SubTask.prototype);
+    return Object.assign(task, json);
+  }
 }
 
 export default SubTask;

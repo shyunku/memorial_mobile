@@ -110,6 +110,25 @@ class Task {
   public set prev(value: string | null) {
     this._prev = value;
   }
+
+  public static fromJSON(json: any): Task {
+    if (json instanceof Task) return json;
+    let task = Object.create(Task.prototype);
+    let _new = Object.assign(task, json);
+
+    _new.subTasks = new Map<string, SubTask>();
+    _new.categories = new Map<string, Category>();
+
+    for (let key in json.subTasks) {
+      let value = json.subTasks[key];
+      _new.subTasks.set(key, SubTask.fromJSON(value));
+    }
+    for (let key in json._categories) {
+      let value = json._categories[key];
+      _new.categories.set(key, Category.fromJSON(value));
+    }
+    return _new;
+  }
 }
 
 export default Task;

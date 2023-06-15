@@ -8,7 +8,8 @@
       "@pages/*": ["pages/*"],
       "@styles/*": ["styles/*"],
       "@utils/*": ["utils/*"],
-      "@objects/*": ["objects/*"]
+      "@objects/*": ["objects/*"],
+      "@assets/*": ["assets/*"]
     }
   },
   "exclude": [

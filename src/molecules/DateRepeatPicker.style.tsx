@@ -11,7 +11,7 @@ interface DateRepeatPickerProps {
   repeatPeriod: string | null;
 }
 
-const repeatTypes = (period: string) => {
+const repeatTypes = (period: string | null) => {
   switch (period) {
     case 'day':
       return '매일';
@@ -29,12 +29,17 @@ const DateRepeatPicker = ({
   date,
   repeatPeriod,
 }: DateRepeatPickerProps): JSX.Element => {
+  const isActivated: boolean = useMemo(() => {
+    return date != null && repeatPeriod != null && repeatPeriod.length > 0;
+  }, [date, repeatPeriod]);
+
   const repeatPrefixLabel = useMemo(() => {
-    if (!repeatPeriod) return '';
-    return repeatTypes(repeatPeriod);
-  }, [repeatPeriod]);
+    if (isActivated) return repeatTypes(repeatPeriod);
+    return '반복 없음';
+  }, [repeatPeriod, isActivated]);
+
   const repeatPostfixLabel = useMemo(() => {
-    if (!date) return '';
+    if (!isActivated) return '';
     switch (repeatPeriod) {
       case 'day':
         return moment(date).format(' A h시 mm분');
@@ -46,12 +51,12 @@ const DateRepeatPicker = ({
         return moment(date).format(' M월 D일');
     }
     return '';
-  }, [date, repeatPeriod]);
+  }, [date, repeatPeriod, isActivated]);
 
-  const mainColor = date
+  const mainColor = isActivated
     ? constantsStyle.highlightColor
     : constantsStyle.stdTextColor;
-  const bgColor = date
+  const bgColor = isActivated
     ? constantsStyle.activeDateTimePickerColor
     : constantsStyle.inactiveDateTimePickerColor;
 
@@ -67,7 +72,8 @@ const DateRepeatPicker = ({
           testID="date-time-label"
           style={DateTimePickerStyle.dateTimeLabel}>
           <AppText size={11} color={mainColor}>
-            {repeatPrefixLabel} {repeatPostfixLabel}
+            {repeatPrefixLabel}
+            {repeatPostfixLabel}
           </AppText>
         </View>
       </View>

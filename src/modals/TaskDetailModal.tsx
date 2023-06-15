@@ -31,6 +31,7 @@ const TaskDetailModal = ({task, ...rest}: TaskDetailModalProps) => {
   }, [task, counter]);
 
   const remainTimeText = useMemo(() => {
+    if (remainTime == null) return '-';
     return `${fromRelativeTime(Math.abs(remainTime))}`;
   }, [remainTime]);
 

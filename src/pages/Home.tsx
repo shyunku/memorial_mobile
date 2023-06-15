@@ -12,7 +12,12 @@ import {View, Text, ScrollView, Platform, TouchableOpacity} from 'react-native';
 import Modal from 'react-native-modal';
 import HomeStyle from './Home.style';
 import {useDispatch, useSelector} from 'react-redux';
-import {categoriesSlice, tasksSlice} from '@/store/stateSlice';
+import {
+  categoriesSlice,
+  clearCategories,
+  clearTasks,
+  tasksSlice,
+} from '@/store/stateSlice';
 import currentSlice, {selectedCategoryIdSlice} from '@/store/currentSlice';
 import {
   DEFAULT_CATEGORIES,
@@ -20,12 +25,21 @@ import {
   TaskViewMode,
 } from '@/constants/common.const';
 import Category from '@/objects/Category';
+import {removeAuth} from '@/store/accountSlice';
 
 const Home = (): JSX.Element => {
   const dispatch = useDispatch();
-  const taskMap: {[key: string]: Task} = useSelector(tasksSlice);
+  const tasks: {[key: string]: Object} = useSelector(tasksSlice);
   const categories: any = useSelector(categoriesSlice);
   const selectedCategoryId: any = useSelector(selectedCategoryIdSlice);
+
+  const taskMap: {[key: string]: Task} = useMemo(() => {
+    return Object.values(tasks).reduce((acc: any, task: Object) => {
+      const newTask = Task.fromJSON(task);
+      acc[newTask.id] = newTask;
+      return acc;
+    }, {});
+  }, [tasks]);
 
   const [selectedTaskItemId, setSelectedTaskItemId] = useState<string | null>(
     null,
@@ -50,13 +64,25 @@ const Home = (): JSX.Element => {
   }, [selectedCategoryId, categories]);
 
   const undoneTaskCounts = useMemo(() => {
-    return Object.values(taskMap).filter((task: Task) => !task.done).length;
+    return Object.values(taskMap).filter((task: Task) => {
+      if (task.done) return false;
+      const categories: Map<string, Category> = task.categories;
+      for (let [cid, category] of categories) {
+        if (category.secret) return false;
+      }
+      return true;
+    }).length;
   }, [taskMap]);
 
   const {socket, connected: socketConnected, onMessage, sendSync} = useSocket();
 
   useEffect(() => {
     if (!socketConnected) return;
+    dispatch(clearTasks());
+    dispatch(clearCategories());
+
+    // dispatch(removeAuth());
+
     // TODO :: test token
     (async () => {
       const lastRemoteBlockNumber: any = await sendSync('lastBlockNumber');
@@ -75,6 +101,15 @@ const Home = (): JSX.Element => {
     onMessage('broadcast_transaction', (data: any) => {
       console.log('tx', data);
     });
+    onMessage('last_block_number', (data: any) => {
+      const lastBlockNumber = data.data;
+      console.log('last_block_number', lastBlockNumber);
+      setRemoteBlockNumber(lastBlockNumber);
+    });
+
+    return () => {
+      socket?.close();
+    };
   }, [socketConnected]);
 
   /* ----------------------- filter ----------------------- */
@@ -104,7 +139,7 @@ const Home = (): JSX.Element => {
       try {
         const categories: Map<string, Category> = task.categories;
         if (categories == undefined) {
-          console.log(task.categories, task);
+          console.log(task.categories, task instanceof Task, task);
           console.error('categories is undefined');
           return false;
         }
@@ -130,9 +165,10 @@ const Home = (): JSX.Element => {
 
   /* ----------------------- Sorters ----------------------- */
   const sorter = useMemo(() => {
+    const defaultSorter = (t1: Task, t2: Task) => 0;
     switch (currentSortOption) {
       case SortOption.IMPORTANT:
-        return null;
+        return defaultSorter;
       case SortOption.REMAIN_DATE:
         return (t1: Task, t2: Task) => {
           if (t1.dueDate == null && t2.dueDate == null) return 0;
@@ -152,7 +188,7 @@ const Home = (): JSX.Element => {
           return moment(t2.createdAt).diff(moment(t1.createdAt));
         };
       default:
-        return null;
+        return defaultSorter;
     }
   }, [currentSortOption]);
 

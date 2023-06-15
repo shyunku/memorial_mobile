@@ -8,11 +8,9 @@ import {useDispatch, useSelector} from 'react-redux';
 import PackageJSON from '../../package.json';
 import {v4 as uuid} from 'uuid';
 import {Buffer} from 'buffer';
+import {getServerEndpoint} from '@/util/common';
 
-const SERVER_ENDPOINT_URL = PackageJSON.config.app_server_endpoint;
-const SERVER_API_VERSION = PackageJSON.config.app_server_api_version;
-const SERVER_ENDPOINT = `${SERVER_ENDPOINT_URL}/${SERVER_API_VERSION}`;
-const WEBSOCKET_ENDPOINT = `${SERVER_ENDPOINT.replace(
+const WEBSOCKET_ENDPOINT = `${getServerEndpoint().replace(
   /http/g,
   'ws',
 )}/websocket/connect`;

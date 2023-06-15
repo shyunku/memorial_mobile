@@ -59,6 +59,11 @@ class Category {
   public set isDefault(value: boolean) {
     this._isDefault = value;
   }
+  public static fromJSON(json: any): Category {
+    if (json instanceof Category) return json;
+    let task = Object.create(Category.prototype);
+    return Object.assign(task, json);
+  }
 }
 
 export default Category;

@@ -1,9 +1,18 @@
+import PackageJSON from '../../package.json';
+
 const YEAR = 365 * 24 * 60 * 60 * 1000;
 const MONTH = 30 * 24 * 60 * 60 * 1000;
 const DAY = 24 * 60 * 60 * 1000;
 const HOUR = 60 * 60 * 1000;
 const MINUTE = 60 * 1000;
 const SECOND = 1000;
+
+export function getServerEndpoint() {
+  const SERVER_ENDPOINT_URL = PackageJSON.config.app_server_endpoint;
+  const SERVER_API_VERSION = PackageJSON.config.app_server_api_version;
+  const SERVER_ENDPOINT = `${SERVER_ENDPOINT_URL}/${SERVER_API_VERSION}`;
+  return SERVER_ENDPOINT;
+}
 
 export function fastInterval(
   callback: () => void,

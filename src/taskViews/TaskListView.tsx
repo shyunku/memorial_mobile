@@ -19,6 +19,8 @@ const TaskListView = ({
 }: TaskListViewProps): JSX.Element => {
   const sortedTaskList: Task[] = useMemo(() => {
     let sorted: Task[] = [];
+    if (Object.keys(taskMap).length == 0) return sorted;
+
     // find first
     let iterTask: Task | null = null;
     for (let tid in taskMap) {
@@ -48,6 +50,7 @@ const TaskListView = ({
 
     for (let i = 0; i < sortedTaskList.length; i++) {
       const task = sortedTaskList[i];
+      // console.log(`${i}/${sortedTaskList.length}`, task instanceof Task);
       if (!filter(task)) continue;
       (task.done ? doneTaskList : notDoneTaskList).push(task);
     }
