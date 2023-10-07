@@ -25,15 +25,21 @@ const LoginStyle = StyleSheet.create({
   loginFormWrapper: {
     flex: 1,
     justifyContent: 'center',
+    // backgroundColor: 'blue',
   },
   loginForm: {
-    marginTop: -120,
-    marginLeft: 40,
+    marginTop: -60,
+    // marginLeft: 40,
+    // width: '100%',
+    // backgroundColor: 'red',
+    alignItems: 'center',
   },
   guide: {
     color: 'white',
     fontSize: 9,
     marginBottom: 5,
+    // width: '100%',
+    // textAlign: 'left',
   },
   loginTitle: {
     color: 'white',
