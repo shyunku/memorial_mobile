@@ -18,6 +18,9 @@ const stateSlice = createSlice({
     setCategories: (state: any, action: any) => {
       state.categories = {...current(state).categories, ...action.payload};
     },
+    setAll: (state: any, action: any) => {
+      state = {...current(state), ...action.payload};
+    },
     clearTasks: (state: any, action: any) => {
       state.tasks = initialState.tasks;
     },
@@ -34,5 +37,6 @@ export const {setTasks, setCategories, clearTasks, clearCategories, clearAll} =
   stateSlice.actions;
 export const tasksSlice = (state: any) => state.txState.tasks;
 export const categoriesSlice = (state: any) => state.txState.categories;
+export const statesSlice = (state: any) => state.txState;
 
 export default stateSlice.reducer;

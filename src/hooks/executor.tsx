@@ -3,6 +3,8 @@ import {useDispatch} from 'react-redux';
 import {setCategories, setTasks} from '@/store/stateSlice';
 import Category from '@/objects/Category';
 import SubTask from '@/objects/Subtask';
+import {deepCopy} from '@/util/common';
+import {applyTransition} from './transitions';
 
 const convertDate = (date: any) => {
   return date ? new Date(date) : null;
@@ -73,4 +75,22 @@ export const applyInitialState = (
 
   dispatch(setCategories(categoryMap));
   dispatch(setTasks(taskMap));
+};
+
+// add transitions executor for transaction
+export const applyTransaction = (updates: any, addPromise: Function) => {
+  addPromise((states: any) => {
+    return new Promise(async (resolve, reject) => {
+      if (updates == null) resolve(states);
+      let copied: any = deepCopy(states);
+      const {srcTx, transitions} = updates;
+      for (const transition of transitions) {
+        try {
+          states = await applyTransition(copied, transition);
+        } catch (err) {
+          reject(err);
+        }
+      }
+    });
+  });
 };

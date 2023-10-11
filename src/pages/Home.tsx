@@ -1,5 +1,5 @@
 import AppText from '@/atoms/AppText';
-import {applyInitialState} from '@/hooks/executor';
+import {applyInitialState, applyTransaction} from '@/hooks/executor';
 import useSocket from '@/hooks/websocket';
 import TaskDetailModal from '@/modals/TaskDetailModal';
 import SubTask from '@/objects/Subtask';
@@ -26,12 +26,15 @@ import {
 } from '@/constants/common.const';
 import Category from '@/objects/Category';
 import {removeAuth} from '@/store/accountSlice';
+import useTransaction from '@/hooks/useTransaction';
 
 const Home = (): JSX.Element => {
   const dispatch = useDispatch();
   const tasks: {[key: string]: Object} = useSelector(tasksSlice);
   const categories: any = useSelector(categoriesSlice);
   const selectedCategoryId: any = useSelector(selectedCategoryIdSlice);
+
+  const {addPromise} = useTransaction();
 
   const taskMap: {[key: string]: Task} = useMemo(() => {
     return Object.values(tasks).reduce((acc: any, task: Object) => {
@@ -100,6 +103,12 @@ const Home = (): JSX.Element => {
 
     onMessage('broadcast_transaction', (data: any) => {
       console.log('tx', data);
+      try {
+        const {number, updates, hash} = data;
+        applyTransaction(updates, addPromise);
+      } catch (err) {
+        console.error(err);
+      }
     });
     onMessage('last_block_number', (data: any) => {
       const lastBlockNumber = data.data;

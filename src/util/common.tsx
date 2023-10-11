@@ -93,3 +93,16 @@ export const fromRelativeTime = (
 
   return (inversed ? '-' : '') + texts.join(' ');
 };
+
+// recursively deep copy with non-circular object
+export function deepCopy(obj: any) {
+  let newObj: any = {};
+  for (let key in obj) {
+    if (typeof obj[key] === 'object' && obj[key] != null) {
+      newObj[key] = deepCopy(obj[key]);
+    } else {
+      newObj[key] = obj[key];
+    }
+  }
+  return newObj;
+}
